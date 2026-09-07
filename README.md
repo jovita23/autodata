@@ -12,7 +12,7 @@ to **Machine Translation (MT)** discriminative data generation.
 
 - [Version History](#version-history)
 1. [What is AutoData?](#1-what-is-autodata)
-2. [How This code Adapts AutoData for MT]
+2. [How This code Adapts AutoData for MT](#2-how-this-code-adapts-autodata-for-mt)
 3. [Architecture](#3-architecture)
 4. [The Inner Loop (8 Steps)](#4-the-inner-loop-8-steps)
 5. [Acceptance Criteria](#5-acceptance-criteria)
