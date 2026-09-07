@@ -1,4 +1,4 @@
-# AutoData MT — Agentic Self-Instruct for Machine Translation
+# AutoData MT PoC — Agentic Self-Instruct for Machine Translation
 
 A Proof-of-Concept implementation of Meta FAIR's **AutoData** framework applied
 to **Machine Translation (MT)** discriminative data generation.
@@ -12,13 +12,13 @@ to **Machine Translation (MT)** discriminative data generation.
 
 - [Version History](#version-history)
 1. [What is AutoData?](#1-what-is-autodata)
-2. [How This code Adapts AutoData for MT](#2-how-this-code-adapts-autodata-for-mt)
+2. [How This PoC Adapts AutoData for MT](#2-how-this-poc-adapts-autodata-for-mt)
 3. [Architecture](#3-architecture)
 4. [The Inner Loop (8 Steps)](#4-the-inner-loop-8-steps)
 5. [Acceptance Criteria](#5-acceptance-criteria)
 6. [Challenge Types](#6-challenge-types)
 7. [Installation](#7-installation)
-8. [Running the code](#8-running-the-code)
+8. [Running the PoC](#8-running-the-poc)
 9. [Expected Output](#9-expected-output)
 10. [Code Structure](#10-code-structure)
 11. [Design Decisions and Trade-offs](#11-design-decisions-and-trade-offs)
@@ -124,12 +124,12 @@ The harder data also produces measurably better GRPO-trained models.
 
 ---
 
-## 2. How This  Adapts AutoData for MT
+## 2. How This PoC Adapts AutoData for MT
 
 The original AutoData paper uses **CS-research QA** as the task (Challenger
-writes questions; solvers answer them). This  re-maps every role to MT:
+writes questions; solvers answer them). This PoC re-maps every role to MT:
 
-| AutoData role | Original task | **This MT ** |
+| AutoData role | Original task | **This MT PoC** |
 |---|---|---|
 | **Challenger** | Generates questions + rubric | Gemma 4:31b (Ollama) — generates *hard-to-translate English sentences* + rubric |
 | **Weak Solver** | Small LM (Qwen-4B) | `Helsinki-NLP/opus-mt-en-de` — small MarianMT (~74 M params) |
@@ -176,9 +176,9 @@ weaknesses* of small MT models:
 ```
 /data/autodata/
 ├── README.md                  ← This file
-├── requirements_.txt       ← Python dependencies
+├── requirements_poc.txt       ← Python dependencies
 ├── generate_samples.py        ← Pre-existing bulk sampler (unrelated)
-└── autodata_mt/               ←  package
+└── autodata_mt/               ← PoC package
     ├── __init__.py
     ├── config.py              ← Configuration dataclasses
     ├── utils.py               ← Ollama client, JSON extraction, scoring
@@ -187,7 +187,7 @@ weaknesses* of small MT models:
     ├── judge.py               ← Judge agent (Gemma → rubric scores)
     ├── acceptance.py          ← Acceptance gate + rejection feedback builder
     ├── inner_loop.py          ← 8-step AutoData inner loop
-    └── .py                 ← CLI entry point + reporting
+    └── poc.py                 ← CLI entry point + reporting
 ```
 
 ### Data flow for one accepted sample
@@ -339,7 +339,7 @@ ollama run gemma4:31b --version   # optional smoke-test
 
 ```bash
 cd /data/autodata
-pip install -r requirements_.txt
+pip install -r requirements_poc.txt
 ```
 
 > **Memory note**: The NLLB-1.3B model needs ~5 GB VRAM on GPU (or ~5 GB RAM on CPU).
@@ -349,26 +349,26 @@ pip install -r requirements_.txt
 
 ---
 
-## 8. Running the 
+## 8. Running the PoC
 
 All commands are run from `/data/autodata/`.
 
 ### Quick start — 20 accepted EN→DE pairs (default)
 
 ```bash
-python -m autodata_mt.
+python -m autodata_mt.poc
 ```
 
 ### EN→ES with 50 pairs on CPU
 
 ```bash
-python -m autodata_mt. --lang-pair en-es --target-pairs 50 --device cpu
+python -m autodata_mt.poc --lang-pair en-es --target-pairs 50 --device cpu
 ```
 
-### Relaxed acceptance criteria (easier to accept, faster )
+### Relaxed acceptance criteria (easier to accept, faster PoC)
 
 ```bash
-python -m autodata_mt. \
+python -m autodata_mt.poc \
     --weak-max 0.65 \
     --strong-min 0.60 \
     --min-gap 0.15 \
@@ -378,7 +378,7 @@ python -m autodata_mt. \
 ### Stricter acceptance (matches AutoData blog thresholds)
 
 ```bash
-python -m autodata_mt. \
+python -m autodata_mt.poc \
     --weak-max 0.50 \
     --strong-min 0.75 \
     --min-gap 0.25 \
@@ -388,13 +388,13 @@ python -m autodata_mt. \
 ### Debug mode (verbose inner-loop traces)
 
 ```bash
-python -m autodata_mt. --log-level DEBUG --target-pairs 5
+python -m autodata_mt.poc --log-level DEBUG --target-pairs 5
 ```
 
 ### Full CLI reference
 
 ```
-python -m autodata_mt. --help
+python -m autodata_mt.poc --help
 
 optional arguments:
   --lang-pair          {en-de,en-es}   Language pair (default: en-de)
@@ -407,7 +407,7 @@ optional arguments:
   --ollama-model STR   Ollama model name (default: gemma4:31b)
   --ollama-url URL     Ollama base URL (default: http://localhost:11434)
   --device             {auto,cuda,cpu} (default: auto)
-  --output-dir DIR     Output directory (default: output_/)
+  --output-dir DIR     Output directory (default: output_poc/)
   --log-level          {DEBUG,INFO,WARNING,ERROR}
 ```
 
@@ -419,7 +419,7 @@ optional arguments:
 
 ```
 ══════════════════════════════════════════════════════════════════════════
-  AutoData — Agentic Self-Instruct   |  Machine Translation
+  AutoData — Agentic Self-Instruct PoC  |  Machine Translation
 ══════════════════════════════════════════════════════════════════════════
   Language pair    : EN → DE
   Target pairs     : 20
@@ -449,7 +449,7 @@ optional arguments:
 
 ### Saved JSON output
 
-`output_/en-de_autodata_.json`:
+`output_poc/en-de_autodata_poc.json`:
 
 ```json
 [
@@ -508,7 +508,7 @@ optional arguments:
 ```
 autodata_mt/
 ├── config.py        Configuration dataclasses
-│                      AcceptanceCriteria, OllamaConfig, MTConfig, Config
+│                      AcceptanceCriteria, OllamaConfig, MTConfig, PoCConfig
 │                      NLLB_LANG_CODES, WEAK_MODELS, STRONG_MODELS
 │
 ├── utils.py         Shared utilities
@@ -544,7 +544,7 @@ autodata_mt/
 │                      run_inner_loop()       — orchestrates Steps 1–8
 │                      AcceptedSample         — challenge + scores + acceptance result
 │
-└── .py           CLI entry point
+└── poc.py           CLI entry point
                        main()                 — arg parsing, model loading, generation loop
                        _print_accepted()      — per-sample console output
                        _print_summary()       — aggregate statistics + histogram
@@ -561,7 +561,7 @@ The blog uses separate frontier models for different roles (Kimi-K2.6 for
 Challenger/Judge, smaller local model for Weak Solver). Since only `gemma4:31b`
 is available locally via Ollama, it doubles as both. This introduces a
 **role-conflict risk** — the same model proposes and evaluates — but is
-acceptable for a . In production, use separate models or a smaller model
+acceptable for a PoC. In production, use separate models or a smaller model
 for judging.
 
 ### Why NLLB-200-distilled-1.3B as the strong solver?
@@ -577,9 +577,9 @@ because:
 ### LLM-as-Judge vs. Automatic Metrics
 
 AutoData uses an LLM judge because BLEU/chrF do not capture idiom correctness,
-register appropriateness, or semantic accuracy against a rubric. The  follows
+register appropriateness, or semantic accuracy against a rubric. The PoC follows
 this design. Automatic metrics can be added as supplementary signals by
-uncommenting `sacrebleu` in `requirements_.txt`.
+uncommenting `sacrebleu` in `requirements_poc.txt`.
 
 ### JSON robustness
 
@@ -600,7 +600,7 @@ acceptance threshold.
 
 ### Sequential execution
 
-Unlike the reference repo's nested `ThreadPoolExecutor` concurrency, the 
+Unlike the reference repo's nested `ThreadPoolExecutor` concurrency, the PoC
 runs sequentially. This is intentional: both HuggingFace models share GPU with
 Ollama, and concurrent inference could cause OOM. For throughput, enable
 `--device cpu` for the HuggingFace models and run Ollama with GPU.
@@ -611,7 +611,7 @@ Ollama, and concurrent inference could cause OOM. For throughput, enable
 
 ### New / different
 
-| Area | Blog | This  |
+| Area | Blog | This PoC |
 |---|---|---|
 | **Task** | CS-research QA from paper passages | Machine Translation (EN→DE / EN→ES) |
 | **Challenger output** | Question + reference answer + rubric | Hard source sentence + reference translation + rubric |
@@ -628,11 +628,11 @@ Ollama, and concurrent inference could cause OOM. For throughput, enable
 | **Weak score floor** | None | `weak_avg ≥ 0.05` — rejects untranslatable noise sentences |
 | **Weak score ceiling** | `weak_avg ≤ 0.65` | **`weak_avg ≤ 0.55`** — tighter; MT models are more deterministic than LLM solvers |
 
-### Not implemented (out of scope for a )
+### Not implemented (out of scope for a PoC)
 
 | Blog feature | Reason skipped |
 |---|---|
 | Outer meta-optimization loop (harness evolution, 12.8% → 42.4%) | Requires multi-generation AST-level code mutation |
-| GRPO / SFT fine-tuning of the weak model |  stops at data generation |
+| GRPO / SFT fine-tuning of the weak model | PoC stops at data generation |
 | 10,000+ source documents (S2ORC corpus) | MT task generates source sentences from scratch, no corpus needed |
 | Boltzmann population sampling | Tied to the outer loop |
